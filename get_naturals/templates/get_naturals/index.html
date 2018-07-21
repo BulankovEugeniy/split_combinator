@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <title>Natrual mix combinator</title>
+  </head>
+  <body>
+	<div class="container">
+			<p class="h1">Natural mix combinator</p>
+			<div class="input-group mb-3">
+				<input type="text" class="form-control" id="budget" value="1000000">
+				<div class="input-group-prepend">
+					<span class="input-group-text" id="inputGroup-sizing-default">Budget, rur</span>
+				</div>
+			</div>
+            
+			<div class="input-group mb-3">
+				<input type="text" class="form-control" id="spot_duration" value="30">
+                <div class="input-group-prepend">
+                	<span class="input-group-text" id="inputGroup-sizing-default">Average spot duration, sec</span>
+ 				</div>
+            </div>
+
+			<div class="input-group mb-3">
+				<input type="text" class="form-control" id="days_on_air" value="28">
+				<div class="input-group-prepend">
+					<span class="input-group-text" id="inputGroup-sizing-default">Days on air</span>
+				</div>
+			</div>
+
+			<div class="input-group mb-3">
+				<input type="text" class="form-control" id="spots_per_day" value="15">
+				<div class="input-group-prepend">
+					<span class="input-group-text" id="inputGroup-sizing-default">Spots per day</span>
+				</div>
+			</div>
+
+			<div class="input-group mb-3">
+				<input type="text" class="form-control" id="orbita_percent" value="10">
+				<div class="input-group-prepend">
+					<span class="input-group-text" id="inputGroup-sizing-default">Orbita, % TRP</span>
+				</div>
+			</div>
+
+			<table class="table">
+				<thead>
+					<col width="160">
+					<col width="120">
+					<col width="90">
+					<col width="90">
+					<col width="140">
+					<col width="240">
+					<col width="90">
+					<tr>
+						<th>Channel</th>
+						<th>Distribution</th>
+						<th>TVR</th>
+						<th>Affinity</th>
+						<th>TCPP</th>
+						<th>Mandatory placement</th>
+						<th>Prime-time %</th>
+					</tr>
+				</thead>
+				<tbody>
+    				{% if input_channels %}
+    				{% for channel in input_channels %}
+						<tr>
+							<td>			
+								<p class="form-control-static">{{channel.channel}}</p>
+							</td>
+							<td>
+								<p class="form-control-static">{{channel.distr}}</p>
+							</td>
+							<td>
+								<input type="tvr" class="form-control" id="tvr_{{channel.pk}}" value={{channel.tvr}}>
+							</td>
+							<td>
+								<input type="affinity" class="form-control" id="affinity_{{channel.pk}}" value={{channel.affinity}}>
+							</td>
+							<td>
+								<input type="tcpp" class="form-control" id="tcpp_{{channel.pk}}" value={{channel.tcpp}}>
+							</td>
+							<td>
+  					  			<div class="form-group">
+    								<select class="form-control" id="mp_{{channel.pk" tag="input">
+      									<option>Calculate</option>
+      									<option>Yes</option>
+      									<option>No</option>
+    								</select>
+  								</div>
+							</td>
+							<td>
+								<input type="prime" class="form-control" id="print_{{channel.pk}}" value={{channel.prime_time}}>
+							</td>
+						</tr>
+    				{% endfor %}
+					{% else %}
+    					<p>No polls are available.</p>
+					{% endif %}
+				</tbody>
+			</table>
+			<button class="btn btn-primary btn-lg btn-block" onclick="send_form_data()">Calculate</button>
+			<button id="select_data_button" class="btn btn-primary btn-lg btn-block" onclick="select_result_data('.resppp')" style="display:none">Select data</button>
+		</div>
+		<p> </p>
+		<script>
+			get_form_data = function(event){
+				var res = ""	
+				for(var i = 0; i < document.getElementsByTagName("input").length; i++){
+					if(res === ""){
+						res = document.getElementsByTagName("input")[i].value
+					}else{
+						res = res + ";" + document.getElementsByTagName("input")[i].value
+					}
+				}
+				for(var i = 0; i < document.getElementsByTagName("select").length; i++){
+					res = res + ";" + document.getElementsByTagName("select")[i].value
+				} 
+				return res;
+			}
+			httpGet = function(theUrl, post_request){
+				var xhr = new XMLHttpRequest();
+				xhr.open("POST", theUrl, false);
+				xhr.send(post_request);
+				return xhr.responseText;
+			}
+			insert_result_data = function(data_to_insert, div_to_insert, style_to_insert){
+				document.getElementById(div_to_insert).innerText = data_to_insert
+				document.getElementById(div_to_insert).style = style_to_insert
+			}
+			select_result_data = function(div_class){
+				window.getSelection().removeAllRanges();
+				var div_link = document.querySelector(div_class);
+				var range = document.createRange();
+				range.selectNode(div_link)
+				window.getSelection().addRange(range);
+			}
+			send_form_data = function(){
+				ddd = httpGet("http://46.21.248.238:8000/get_naturals/", get_form_data())
+				if(ddd[0] === "<"){
+					alert("Check input data");
+					insert_result_data("", "resppp", "")
+					document.getElementById("select_data_button").style.display = "none"	
+				}else{
+					insert_result_data(ddd, "resppp", "border: 2px solid blue; width: 100000px;")
+					document.getElementById("select_data_button").style.display = "initial";
+				}
+				
+			}
+		</script>
+	</div>
+	<div id="resppp" class="resppp">
+	</div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  </body>
+</html>
